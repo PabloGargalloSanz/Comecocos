@@ -11,10 +11,10 @@ public class mapa {
 	char limite = '#';
 	char pared = '|';
 	char personaje = 'C';
-	char personajeChetado = 'X' ;
+	//char personajeChetado = 'X' ;
 	char fantasma = 'F';
 	char puntos = '*';
-	char comerFantasmas = '+';
+	//char comerFantasmas = '+';
 	char vacio = ' ';
 	
 	// Variable calculo centro
