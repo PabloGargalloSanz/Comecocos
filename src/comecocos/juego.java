@@ -8,12 +8,7 @@ public class juego {
 			
 			mapa nuevoMapa = new mapa();
 			
-	        
-	        while (true) {
-	        	
-	            nuevoMapa.imprimirMapa();
-	            
-	            nuevoMapa.movimientoJugador();
-	        }
+	        nuevoMapa.jugar();
+	      
 	    }
 }

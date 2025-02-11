@@ -12,8 +12,8 @@ public class mapa {
 	char pared = '|';
 	char personaje = 'C';
 	//char personajeChetado = 'X' ;
-	char fantasma = 'F';
-	char puntos = '*';
+	
+	char galletas = '*';
 	//char comerFantasmas = '+';
 	char vacio = ' ';
 	
@@ -25,6 +25,23 @@ public class mapa {
 	int filaJugador;
 	int columnaJugador;
 	
+	//Variable posicion fantasma
+	char [] fantasma = { 'F', 'F', 'F', 'F'};
+	int[] filaFantasma = new int[4];
+	int[] columnaFantasma = new int[4];
+	int [][] posicionesFantasmas = {
+			{centroFila, centroColumna},
+			{centroFila - 1, centroColumna},
+			{centroFila, centroColumna - 1},
+			{centroFila, centroFila + 1}
+	};
+	
+	// Variables puntuacion
+	int puntos = 0;
+	
+	// Variable seguir jugando
+	boolean seguirJugando = true;
+	
 	// Caja fantasmas para jugador
 	boolean bloqueado = (filaJugador >= (centroFila - 1) && filaJugador <= (centroFila + 1) 
 			&& columnaJugador >= (centroColumna - 2) && columnaJugador <= (centroColumna + 2));
@@ -34,10 +51,10 @@ public class mapa {
 	char direccion;
 	
 	
-	/*
+	// Variables niveles
 	char superior = 'U'; //Para subir a un nivel mas exigente (uppper)
-	char inferior = 'L'; //Para bajar a un nivel mas falic (lower)
-	*/
+	char inferior = 'L'; //Para bajar a un nivel mas facil (lower)
+	
 
 	Random ran = new Random();
 	Scanner sc = new Scanner(System.in);
@@ -64,7 +81,7 @@ public class mapa {
 		generarFantasmas();
 	}
 		
-	// Generar Bordes y puntos
+	// Generar Bordes y galletas
 	public void generarBordes() {
 		for(int i = 0; i < alto; i++) {
 			for(int j = 0; j < ancho; j++) {
@@ -74,7 +91,7 @@ public class mapa {
 				
 				
 				}else {
-					mapa[i][j] = puntos;
+					mapa[i][j] = galletas;
 				}
 			}
 			
@@ -103,7 +120,22 @@ public class mapa {
 		}
 	}
 				
+	// Generar galletas para subir o bajar de nivel
+	public void niveles() {
 		
+		if(ran.nextInt(100) < 5) {
+			mapa[(ran.nextInt(alto - 2)) + 1][1] = superior;
+		}
+		
+		if(ran.nextInt(100) < 5) {
+			mapa[alto - 2][ancho -2] = inferior;
+		}
+		
+		
+		
+		
+	}
+	
 		// Generar jugador
 	public void generarJugador() {
 		
@@ -132,28 +164,32 @@ public class mapa {
 		switch (direccion) {
 			case 'w' -> {
 				
-				if (filaJugador > 1 && mapa[filaJugador - 1 ][columnaJugador] != limite ) {
+				if ((filaJugador > 1 && mapa[filaJugador - 1 ][columnaJugador] != limite ) &&
+					(filaJugador > 1 && mapa[filaJugador - 1 ][columnaJugador] != pared )){
 					filaJugador--;
 				}
 			}
 			
 			case 's' -> {
 				
-				if (filaJugador < alto - 2 && mapa[filaJugador + 1 ][columnaJugador] != limite ) {
+				if ((filaJugador < alto - 2 && mapa[filaJugador + 1 ][columnaJugador] != limite ) &&
+					(filaJugador < alto - 2 && mapa[filaJugador + 1 ][columnaJugador] != pared )) {
 					filaJugador++;
 				}
 			}
 			
 			case 'a' -> {
 				
-				if (columnaJugador > 1 && mapa[filaJugador][columnaJugador - 1 ] != limite ) {
+				if ((columnaJugador > 1 && mapa[filaJugador][columnaJugador - 1 ] != limite ) &&
+					(columnaJugador > 1 && mapa[filaJugador][columnaJugador - 1 ] != pared )) {
 					columnaJugador--;
 				}
 			}
 			
 			case 'd' -> {
 				
-				if (columnaJugador < ancho - 2 && mapa[filaJugador][columnaJugador + 1 ] != limite ) {
+				if ((columnaJugador < ancho - 2 && mapa[filaJugador][columnaJugador + 1 ] != limite ) &&
+					(columnaJugador < ancho - 2 && mapa[filaJugador][columnaJugador + 1 ] != pared )){
 					columnaJugador++;
 				}
 			}
@@ -161,9 +197,25 @@ public class mapa {
 			
 		}
 		
+		puntos++; //Cada vez que se mueva se suma 1 punto (simulando puntuacion por tiempo vivo)
+		
+		puntos();
+		
 		mapa[filaJugador][columnaJugador] = personaje;	
 		
 	}
+	
+	//Puntuación
+	public void puntos() {
+		if(mapa[filaJugador][columnaJugador] == '*') {
+			puntos = puntos + 10;
+			
+			mapa[filaJugador][columnaJugador] = ' ';
+		}
+		
+		System.out.println(puntos);
+	}
+	
 	
 	
 		// Generar caja fantasmas
@@ -182,20 +234,87 @@ public class mapa {
 
 		// Generar fantasmas
 	public void generarFantasmas() {
-		for(int i = 0; i < alto; i++) {
-			for(int j = 0; j < ancho; j++) {
-					
-				//mapa[(mapa[i].length -1) / 2][(mapa[j].length -1) / 2] = fantasma; // En el centro del mapa generado
+		for(int i = 0; i < fantasma.length; i++) {
 				
-				mapa[centroFila][centroColumna] = fantasma; // Fantasma del centro
-				mapa[centroFila -1 ][centroColumna] = fantasma; // Fantasma del centro pero por 1 fila por encima
-				mapa[centroFila][centroColumna - 1] = fantasma; // Fantasma del centro izquierda
-				mapa[centroFila][centroColumna + 1] = fantasma; // Fantasma del centro derecha
+				int fila = posicionesFantasmas[i][0];
+				int columna = posicionesFantasmas[i][1];
 				
-			}
+			
 		}		
 	}
 	
+	public void movimientoFantasma() {
+		int posicion;
+			
+		for(int i = 0; i < 4; i++) {
+			
+			int fila = filaFantasma[i];
+			int columna = columnaFantasma[i];
+			
+			
+			posicion = ran.nextInt(4);
+			
+			mapa[fila][columna] = vacio;
+			
+			switch (posicion) {
+				case 0 -> {
+					
+					if ((fila > 1 && mapa[fila - 1 ][columna] != limite ) &&
+						(fila > 1 && mapa[fila - 1 ][columna] != pared )){
+						fila--;
+					}
+				}
+				
+				case 1 -> {
+					
+					if ((fila < alto - 2 && mapa[fila + 1 ][columna] != limite ) &&
+						(fila < alto - 2 && mapa[fila + 1 ][columna] != pared )) {
+						fila++;
+					}
+				}
+				
+				case 2 -> {
+					
+					if ((columna > 1 && mapa[fila][columna - 1 ] != limite ) &&
+						(columna > 1 && mapa[fila][columna - 1 ] != pared )) {
+						columna--;
+					}
+				}
+				
+				case 3 -> {
+					
+					if ((columna < ancho - 2 && mapa[fila][columna + 1 ] != limite ) &&
+						(columna < ancho - 2 && mapa[fila][columna + 1 ] != pared )){
+						columna++;
+					}
+				}
+				
+				
+			}
+			filaFantasma[i] = fila;
+			columnaFantasma[i] = columna;
+		
+			mapa[fila][columna] = fantasma[i];
+		}
+		
+	}
+	
+	
+	// Finalizar partida por puntos
+	private boolean hayPuntos() {
+		
+		for (int i = 0; i < mapa.length; i++) {
+			for (int j = 0; j < mapa [i].length; j++) {
+				if (mapa[i][j] == '*') {
+					
+					return true;
+				}
+				
+			}
+		}
+		
+		return false;
+	}
 	
 	// Metodo imprimir mapa
 	public void imprimirMapa() {
@@ -212,8 +331,30 @@ public class mapa {
 	
 	public void jugar() {
 		
-		
-		
+		while (seguirJugando) {
+			
+			imprimirMapa();
+			
+			movimientoJugador();
+			
+			movimientoFantasma();
+			
+			hayPuntos();
+			
+			seguirJugando = true;
+			
+			if (!hayPuntos()) {
+				seguirJugando = false;
+				
+				for (int i = 0; i < (alto + 5); i++) {
+					System.out.println("");
+				}
+				
+				System.out.println("Has ganado!!");
+				System.out.println("Puntuación obtenida " + puntos );
+			}
+		}
+			
 	}
 	
 }
