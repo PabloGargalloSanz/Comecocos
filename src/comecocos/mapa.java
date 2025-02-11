@@ -2,6 +2,7 @@ package comecocos;
 
 import java.util.Random;
 import java.util.Scanner;
+import java.util.LinkedList;
 
 public class mapa {
 	
@@ -13,8 +14,7 @@ public class mapa {
 	char personaje = 'C';
 	//char personajeChetado = 'X' ;
 	
-	char galletas = '*';
-	//char comerFantasmas = '+';
+	char galletas = '.';
 	char vacio = ' ';
 	
 	// Variable calculo centro
@@ -53,7 +53,7 @@ public class mapa {
 	
 	// Variables niveles
 	char superior = 'U'; //Para subir a un nivel mas exigente (uppper)
-	char inferior = 'L'; //Para bajar a un nivel mas facil (lower)
+	char inferior = 'W'; //Para bajar a un nivel mas facil (lower)
 	
 
 	Random ran = new Random();
@@ -90,7 +90,7 @@ public class mapa {
 					mapa[i][j] = limite ;
 				
 				
-				}else {
+				 }else {
 					mapa[i][j] = galletas;
 				}
 			}
@@ -122,18 +122,48 @@ public class mapa {
 				
 	// Generar galletas para subir o bajar de nivel
 	public void niveles() {
+		boolean existeSuperior = false;
+		boolean existeInferior = false;
 		
-		if(ran.nextInt(100) < 5) {
-			mapa[(ran.nextInt(alto - 2)) + 1][1] = superior;
+		for(int i = 0; i < alto; i++) {
+			for(int j = 0; j < ancho; j++) {
+				
+				if(mapa[i][j] == superior) {
+					existeSuperior = true;
+				}
+					
+				if(mapa[i][j] == inferior) {
+					existeInferior = true;					
+				}
+			}
+		}
+	
+		if (!existeSuperior && (ran.nextInt(100) < 5)) {
+			int fila;
+			int columna;
+			
+			do {
+				fila = ran.nextInt(alto -2 ) + 1;
+				columna = ran.nextInt(ancho - 2) + 1;
+				
+			}while (mapa[fila][columna] != galletas);
+			
+			mapa[fila][columna] = superior;
 		}
 		
-		if(ran.nextInt(100) < 5) {
-			mapa[alto - 2][ancho -2] = inferior;
+		if (!existeInferior && (ran.nextInt(100) < 5)) {
+			int fil;
+			int col;
+			
+			do {
+				fil = ran.nextInt(alto -2 ) + 1;
+				col = ran.nextInt(ancho - 2) + 1;
+				
+			}while (mapa[fil][col] != galletas);
+			
+			mapa[fil][col] = inferior;
 		}
-		
-		
-		
-		
+			
 	}
 	
 		// Generar jugador
@@ -236,65 +266,97 @@ public class mapa {
 	public void generarFantasmas() {
 		for(int i = 0; i < fantasma.length; i++) {
 				
-				int fila = posicionesFantasmas[i][0];
-				int columna = posicionesFantasmas[i][1];
-				
+			int fila = posicionesFantasmas[i][0];
+			int columna = posicionesFantasmas[i][1];
+			
+			mapa[fila][columna] = fantasma[i];
+			
+			filaFantasma[i] = fila;
+			columnaFantasma[i] = columna;
 			
 		}		
 	}
 	
 	public void movimientoFantasma() {
-		int posicion;
+		for(int i = 0; i < filaFantasma.length; i++) {
 			
-		for(int i = 0; i < 4; i++) {
+			char casillaAnterior = mapa[filaFantasma[i]][columnaFantasma[i]];
 			
-			int fila = filaFantasma[i];
-			int columna = columnaFantasma[i];
+			mapa[filaFantasma[i]][columnaFantasma[i]] = vacio;			
 			
-			
-			posicion = ran.nextInt(4);
-			
-			mapa[fila][columna] = vacio;
-			
-			switch (posicion) {
-				case 0 -> {
-					
-					if ((fila > 1 && mapa[fila - 1 ][columna] != limite ) &&
-						(fila > 1 && mapa[fila - 1 ][columna] != pared )){
-						fila--;
-					}
+			boolean puedeArriba = filaFantasma[i] > 1 && mapa[filaFantasma[i] - 1][columnaFantasma[i]] != limite && mapa[filaFantasma[i] - 1][columnaFantasma[i]] != pared;
+			boolean puedeAbajo = filaFantasma[i] < alto - 2 && mapa[filaFantasma[i] + 1][columnaFantasma[i]] != limite && mapa[filaFantasma[i] + 1][columnaFantasma[i]] != pared;
+			boolean puedeIzquierda = columnaFantasma[i] > 1 && mapa[filaFantasma[i]][columnaFantasma[i] - 1] != limite && mapa[filaFantasma[i]][columnaFantasma[i] - 1] != pared;
+	        boolean puedeDerecha = columnaFantasma[i] < ancho - 2 && mapa[filaFantasma[i]][columnaFantasma[i] + 1] != limite && mapa[filaFantasma[i]][columnaFantasma[i] + 1] != pared;
+
+	        int opciones = 0;
+	        
+	        if ( puedeArriba) {
+	        	opciones++;
+	        }
+	        if ( puedeAbajo) {
+	        	opciones++;
+	        }
+	        if ( puedeIzquierda) {
+	        	opciones++;
+	        }
+	        if ( puedeDerecha) {
+	        	opciones++;
+	        }
+
+	        if (opciones > 1) {
+	        	
+	        	LinkedList<Integer> direccionesDisponibles = new LinkedList<>();
+	        	if ( puedeArriba) {
+		        	direccionesDisponibles.add(0);
+		        }
+		        if ( puedeAbajo) {
+		        	direccionesDisponibles.add(1);
+		        }
+		        if ( puedeIzquierda) {
+		        	direccionesDisponibles.add(2);
+		        }
+		        if ( puedeDerecha) {
+		        	direccionesDisponibles.add(3);
+		        }
+	        	
+	        	int direccion = direccionesDisponibles.get(ran.nextInt(direccionesDisponibles.size()));
+	        	
+	        	if (direccion == 0 ) {
+	        		filaFantasma[i]--;
+	        		
+	        	}else if (direccion == 1 ) {
+	        		filaFantasma[i]++;
+	        	
+		        }else if (direccion == 2 ) {
+		        	columnaFantasma[i]--;
+		        
+				}else if (direccion == 3 ) {
+					columnaFantasma[i]++;
 				}
-				
-				case 1 -> {
-					
-					if ((fila < alto - 2 && mapa[fila + 1 ][columna] != limite ) &&
-						(fila < alto - 2 && mapa[fila + 1 ][columna] != pared )) {
-						fila++;
-					}
-				}
-				
-				case 2 -> {
-					
-					if ((columna > 1 && mapa[fila][columna - 1 ] != limite ) &&
-						(columna > 1 && mapa[fila][columna - 1 ] != pared )) {
-						columna--;
-					}
-				}
-				
-				case 3 -> {
-					
-					if ((columna < ancho - 2 && mapa[fila][columna + 1 ] != limite ) &&
-						(columna < ancho - 2 && mapa[fila][columna + 1 ] != pared )){
-						columna++;
-					}
-				}
-				
-				
+	        	
+	        	
+	        } else {
+	        	if (puedeArriba) {
+	        		filaFantasma[i]--;
+	        		
+	        	} else if (puedeAbajo) {
+	        		filaFantasma[i]++;
+	        		
+	        	} else if (puedeIzquierda) {
+	        		columnaFantasma[i]--;
+	        		
+	        	} else if (puedeDerecha) {
+	        		columnaFantasma[i]++;
+	        	}
+	        	
+	        }
+			 		
+			mapa[filaFantasma[i]][columnaFantasma[i]] = fantasma[i];
+			
+			if (casillaAnterior != vacio && casillaAnterior != limite && casillaAnterior != pared) {
+				mapa[filaFantasma[i]][columnaFantasma[i]] = casillaAnterior;
 			}
-			filaFantasma[i] = fila;
-			columnaFantasma[i] = columna;
-		
-			mapa[fila][columna] = fantasma[i];
 		}
 		
 	}
@@ -305,7 +367,7 @@ public class mapa {
 		
 		for (int i = 0; i < mapa.length; i++) {
 			for (int j = 0; j < mapa [i].length; j++) {
-				if (mapa[i][j] == '*') {
+				if (mapa[i][j] == galletas) {
 					
 					return true;
 				}
@@ -341,6 +403,8 @@ public class mapa {
 			
 			hayPuntos();
 			
+			niveles();
+			
 			seguirJugando = true;
 			
 			if (!hayPuntos()) {
@@ -353,10 +417,11 @@ public class mapa {
 				System.out.println("Has ganado!!");
 				System.out.println("Puntuación obtenida " + puntos );
 			}
+			
 		}
 			
 	}
 	
 }
 
-// Horas= 9
+// Horas= 20
