@@ -11,7 +11,6 @@ public class fantasmaAleatorio {
 		this.x = startX;
 		this.y = startY;
 		this.mapa = mapa;
-		this.ran = ran;
 	}
 	
 	public void movimientoFantasma() {

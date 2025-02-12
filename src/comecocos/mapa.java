@@ -2,7 +2,6 @@ package comecocos;
 
 import java.util.Random;
 import java.util.Scanner;
-import java.util.LinkedList;
 
 public class mapa {
 	
@@ -65,8 +64,7 @@ public class mapa {
 	
 	//Constructor
 	public mapa(){
-		mapa= new char[alto][ancho];
-		generarMapa();
+		mapa = new char[alto][ancho];
 	}
 	
 	
@@ -278,9 +276,66 @@ public class mapa {
 	}
 	
 	public void movimientoFantasma() {
-		for(int i = 0; i < filaFantasma.length; i++) {
-			
-			char casillaAnterior = mapa[filaFantasma[i]][columnaFantasma[i]];
+        for (int i = 0; i < fantasma.length; i++) {
+            int nuevaFila = filaFantasma[i];
+            int nuevaColumna = columnaFantasma[i];
+            int direccion;
+            boolean movimientoValido;
+
+            int intentos = 0;
+            do {
+                direccion = ran.nextInt(4);
+                movimientoValido = true;
+                int tempFila = filaFantasma[i];
+                int tempColumna = columnaFantasma[i];
+                
+                switch (direccion) {
+                    case 0 -> tempFila--; // Arriba
+                    case 1 -> tempFila++; // Abajo
+                    case 2 -> tempColumna--; // Izquierda
+                    case 3 -> tempColumna++; // Derecha
+                }
+                
+                if (tempFila <= 0 || tempFila >= alto - 1 || tempColumna <= 0 || tempColumna >= ancho - 1 ||
+                    mapa[tempFila][tempColumna] == limite || mapa[tempFila][tempColumna] == pared ||
+                    esPosicionFantasma(tempFila, tempColumna)) {
+                    movimientoValido = false;
+                }
+                
+                if (movimientoValido) {
+                    nuevaFila = tempFila;
+                    nuevaColumna = tempColumna;
+                    break;
+                }
+                intentos++;
+            } while (intentos < 10);
+            
+            if (movimientoValido) {
+                mapa[filaFantasma[i]][columnaFantasma[i]] = vacio; // Limpia la posición anterior
+                filaFantasma[i] = nuevaFila;
+                columnaFantasma[i] = nuevaColumna;
+                
+                if (filaFantasma[i] == filaJugador && columnaFantasma[i] == columnaJugador) {
+                    System.out.println("¡Has sido atrapado por un fantasma! GAME OVER");
+                    seguirJugando = false;
+                    return;
+                }
+                
+                mapa[filaFantasma[i]][columnaFantasma[i]] = 'F';
+            }
+		}
+	}
+
+	private boolean esPosicionFantasma(int fila, int columna) {
+		for (int i = 0; i < filaFantasma.length; i++) {
+			if (filaFantasma[i] == fila && columnaFantasma[i] == columna) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+			/* char casillaAnterior = mapa[filaFantasma[i]][columnaFantasma[i]];
 			
 			mapa[filaFantasma[i]][columnaFantasma[i]] = vacio;			
 			
@@ -320,21 +375,15 @@ public class mapa {
 		        	direccionesDisponibles.add(3);
 		        }
 	        	
-	        	int direccion = direccionesDisponibles.get(ran.nextInt(direccionesDisponibles.size()));
+	        	int direccion_fantasma = direccionesDisponibles.get(ran.nextInt(direccionesDisponibles.size()));
 	        	
-	        	if (direccion == 0 ) {
-	        		filaFantasma[i]--;
-	        		
-	        	}else if (direccion == 1 ) {
-	        		filaFantasma[i]++;
-	        	
-		        }else if (direccion == 2 ) {
-		        	columnaFantasma[i]--;
-		        
-				}else if (direccion == 3 ) {
-					columnaFantasma[i]++;
+				switch (direccion_fantasma) {
+					case 0 -> filaFantasma[i]--;
+					case 1 -> filaFantasma[i]++;
+					case 2 -> columnaFantasma[i]--;
+					case 3 -> columnaFantasma[i]++;
+					default -> throw new AssertionError();
 				}
-	        	
 	        	
 	        } else {
 	        	if (puedeArriba) {
@@ -357,21 +406,19 @@ public class mapa {
 			if (casillaAnterior != vacio && casillaAnterior != limite && casillaAnterior != pared) {
 				mapa[filaFantasma[i]][columnaFantasma[i]] = casillaAnterior;
 			}
-		}
+		} 
 		
-	}
+	}*/
 	
 	
 	// Finalizar partida por puntos
 	private boolean hayPuntos() {
 		
-		for (int i = 0; i < mapa.length; i++) {
-			for (int j = 0; j < mapa [i].length; j++) {
-				if (mapa[i][j] == galletas) {
-					
+		for (char[] mapa1 : mapa) {
+			for (int j = 0; j < mapa1.length; j++) {
+				if (mapa1[j] == galletas) {
 					return true;
 				}
-				
 			}
 		}
 		
