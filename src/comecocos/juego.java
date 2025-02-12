@@ -7,7 +7,7 @@ public class juego {
 		public static void main(String[]args) {
 			
 			mapa nuevoMapa = new mapa();
-			
+			nuevoMapa.generarMapa();
 	        nuevoMapa.jugar();
 	      
 	    }
