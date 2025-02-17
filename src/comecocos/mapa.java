@@ -11,9 +11,12 @@ public class mapa {
 	char limite = '#';
 	char pared = '|';
 	char personaje = 'C';
-	//char personajeChetado = 'X' ;
+	char personajeChetado = 'X' ;
+	boolean modoCazador = false;
+	int tiempoCazador = 0;
 	
 	char galletas = '.';
+	char chetadas = '*'; 
 	char vacio = ' ';
 	
 	// Variable calculo centro
@@ -74,6 +77,7 @@ public class mapa {
 	
 		generarBordes();
 		generarParedes();
+		generarChetadas();
 		generarJugador();
 		generarCaja();
 		generarFantasmas();
@@ -105,15 +109,12 @@ public class mapa {
 					&& j >= (centroColumna - 3)	 && j <= (centroColumna + 3)) {
 						
 						continue; // no colocar paredes al rededor de la caja de fantasmas
-						
 				} 
 				
 				if (ran.nextInt(100) < 20) {
 					
 					mapa[i][j] = pared;
 				}
-				
-				
 			}
 		}
 	}
@@ -164,6 +165,32 @@ public class mapa {
 			
 	}
 	
+	// Generar galletas chetadas
+	public void generarChetadas() {
+	
+		int cantidadChetadas = 0;
+		int maxChetadas = (alto + ancho) / 3;
+		
+		for(int i = 1; i < alto - 1; i++) { 
+			for(int j = 1; j < ancho - 1; j++) {
+				
+				do {
+					if (i >= (centroFila - 2) && i <= (centroFila + 2) 
+						&& j >= (centroColumna - 3)	 && j <= (centroColumna + 3) ) {
+							
+							continue; // no colocar paredes al rededor de la caja de fantasmas
+					} 
+				
+					if (ran.nextInt(100) < 5) {
+						mapa[i][j] = chetadas;
+						cantidadChetadas++;
+					}
+					
+				} while(cantidadChetadas <= maxChetadas );
+			}
+		}
+	}
+	
 		// Generar jugador
 	public void generarJugador() {
 		
@@ -186,51 +213,79 @@ public class mapa {
 	public void movimientoJugador() {
 		
 		direccion = sc.next().charAt(0);
+		int nuevaFila = filaJugador;
+		int nuevaColumna = columnaJugador;
+		
 		
 		mapa[filaJugador][columnaJugador] = vacio ;
 		
 		switch (direccion) {
-			case 'w' -> {
-				
-				if ((filaJugador > 1 && mapa[filaJugador - 1 ][columnaJugador] != limite ) &&
-					(filaJugador > 1 && mapa[filaJugador - 1 ][columnaJugador] != pared )){
-					filaJugador--;
-				}
-			}
 			
-			case 's' -> {
-				
-				if ((filaJugador < alto - 2 && mapa[filaJugador + 1 ][columnaJugador] != limite ) &&
-					(filaJugador < alto - 2 && mapa[filaJugador + 1 ][columnaJugador] != pared )) {
-					filaJugador++;
-				}
-			}
+		case 'w' -> {
 			
-			case 'a' -> {
-				
-				if ((columnaJugador > 1 && mapa[filaJugador][columnaJugador - 1 ] != limite ) &&
-					(columnaJugador > 1 && mapa[filaJugador][columnaJugador - 1 ] != pared )) {
-					columnaJugador--;
-				}
+			if ((nuevaFila > 1 && mapa[nuevaFila - 1 ][nuevaColumna] != limite ) &&
+				(nuevaFila > 1 && mapa[nuevaFila - 1 ][nuevaColumna] != pared )){
+				nuevaFila--;
 			}
+		}
+		case 's' -> {
 			
-			case 'd' -> {
-				
-				if ((columnaJugador < ancho - 2 && mapa[filaJugador][columnaJugador + 1 ] != limite ) &&
-					(columnaJugador < ancho - 2 && mapa[filaJugador][columnaJugador + 1 ] != pared )){
-					columnaJugador++;
-				}
+			if ((nuevaFila < alto - 2 && mapa[nuevaFila + 1 ][nuevaColumna] != limite ) &&
+				(nuevaFila < alto - 2 && mapa[nuevaFila + 1 ][nuevaColumna] != pared )) {
+				nuevaFila++;
 			}
+		}
+		case 'a' -> {
 			
+			if ((nuevaColumna > 1 && mapa[nuevaFila][nuevaColumna - 1 ] != limite ) &&
+				(nuevaColumna > 1 && mapa[nuevaFila][nuevaColumna - 1 ] != pared )) {
+				nuevaColumna--;
+			}
+		}
+		case 'd' -> {
+			
+			if ((nuevaColumna < ancho - 2 && mapa[nuevaFila][nuevaColumna + 1 ] != limite ) &&
+				(nuevaColumna < ancho - 2 && mapa[nuevaFila][nuevaColumna + 1 ] != pared )){
+				nuevaColumna++;
+			}
+		}
+		}
+		if (mapa[nuevaFila][nuevaColumna] == chetadas) {
+			modoCazador = true;
+			tiempoCazador = 10;
+			personaje = personajeChetado;
 			
 		}
+		for (char F : fantasma) {
+			if (mapa[nuevaFila][nuevaColumna] == F) {
+				
+				if (modoCazador) {
+					eliminarFantasma(nuevaFila, nuevaColumna);
+					
+				} else {
+					seguirJugando = false;
+					return;
+				}
+			}
+		}
+	
+	
+		if(modoCazador) {
+			tiempoCazador--;
+			if (tiempoCazador <= 0) {
+				modoCazador = false;
+				personaje = 'C';
+			}
+		}
+		
+		filaJugador = nuevaFila;
+		columnaJugador = nuevaColumna;
 		
 		puntos++; //Cada vez que se mueva se suma 1 punto (simulando puntuacion por tiempo vivo)
 		
-		puntos();
-		
 		mapa[filaJugador][columnaJugador] = personaje;	
 		
+		puntos();
 	}
 	
 	//Puntuación
@@ -244,7 +299,12 @@ public class mapa {
 		System.out.println(puntos);
 	}
 	
-	
+	public void eliminarFantasma(int fila, int columna) {
+		mapa[fila][columna] = vacio;
+		puntos = puntos + 100;
+		puntos();
+		
+	}
 	
 		// Generar caja fantasmas
 	public void generarCaja() {
@@ -315,8 +375,8 @@ public class mapa {
                 filaFantasma[i] = nuevaFila;
                 columnaFantasma[i] = nuevaColumna;
                 
-                if (filaFantasma[i] == filaJugador && columnaFantasma[i] == columnaJugador) {
-                    System.out.println("¡Has sido atrapado por un fantasma! GAME OVER");
+                if (filaFantasma[i] == filaJugador && columnaFantasma[i] == columnaJugador && modoCazador == false) {
+                    
                     seguirJugando = false;
                     return;
                 }
@@ -335,80 +395,7 @@ public class mapa {
 		return false;
 	}
 
-			/* char casillaAnterior = mapa[filaFantasma[i]][columnaFantasma[i]];
-			
-			mapa[filaFantasma[i]][columnaFantasma[i]] = vacio;			
-			
-			boolean puedeArriba = filaFantasma[i] > 1 && mapa[filaFantasma[i] - 1][columnaFantasma[i]] != limite && mapa[filaFantasma[i] - 1][columnaFantasma[i]] != pared;
-			boolean puedeAbajo = filaFantasma[i] < alto - 2 && mapa[filaFantasma[i] + 1][columnaFantasma[i]] != limite && mapa[filaFantasma[i] + 1][columnaFantasma[i]] != pared;
-			boolean puedeIzquierda = columnaFantasma[i] > 1 && mapa[filaFantasma[i]][columnaFantasma[i] - 1] != limite && mapa[filaFantasma[i]][columnaFantasma[i] - 1] != pared;
-	        boolean puedeDerecha = columnaFantasma[i] < ancho - 2 && mapa[filaFantasma[i]][columnaFantasma[i] + 1] != limite && mapa[filaFantasma[i]][columnaFantasma[i] + 1] != pared;
-
-	        int opciones = 0;
-	        
-	        if ( puedeArriba) {
-	        	opciones++;
-	        }
-	        if ( puedeAbajo) {
-	        	opciones++;
-	        }
-	        if ( puedeIzquierda) {
-	        	opciones++;
-	        }
-	        if ( puedeDerecha) {
-	        	opciones++;
-	        }
-
-	        if (opciones > 1) {
-	        	
-	        	LinkedList<Integer> direccionesDisponibles = new LinkedList<>();
-	        	if ( puedeArriba) {
-		        	direccionesDisponibles.add(0);
-		        }
-		        if ( puedeAbajo) {
-		        	direccionesDisponibles.add(1);
-		        }
-		        if ( puedeIzquierda) {
-		        	direccionesDisponibles.add(2);
-		        }
-		        if ( puedeDerecha) {
-		        	direccionesDisponibles.add(3);
-		        }
-	        	
-	        	int direccion_fantasma = direccionesDisponibles.get(ran.nextInt(direccionesDisponibles.size()));
-	        	
-				switch (direccion_fantasma) {
-					case 0 -> filaFantasma[i]--;
-					case 1 -> filaFantasma[i]++;
-					case 2 -> columnaFantasma[i]--;
-					case 3 -> columnaFantasma[i]++;
-					default -> throw new AssertionError();
-				}
-	        	
-	        } else {
-	        	if (puedeArriba) {
-	        		filaFantasma[i]--;
-	        		
-	        	} else if (puedeAbajo) {
-	        		filaFantasma[i]++;
-	        		
-	        	} else if (puedeIzquierda) {
-	        		columnaFantasma[i]--;
-	        		
-	        	} else if (puedeDerecha) {
-	        		columnaFantasma[i]++;
-	        	}
-	        	
-	        }
-			 		
-			mapa[filaFantasma[i]][columnaFantasma[i]] = fantasma[i];
-			
-			if (casillaAnterior != vacio && casillaAnterior != limite && casillaAnterior != pared) {
-				mapa[filaFantasma[i]][columnaFantasma[i]] = casillaAnterior;
-			}
-		} 
-		
-	}*/
+	
 	
 	
 	// Finalizar partida por puntos
@@ -439,20 +426,17 @@ public class mapa {
 
 	
 	public void jugar() {
-		
 		while (seguirJugando) {
 			
 			imprimirMapa();
 			
 			movimientoJugador();
 			
-			movimientoFantasma();
-			
 			hayPuntos();
 			
 			niveles();
 			
-			seguirJugando = true;
+			movimientoFantasma();
 			
 			if (!hayPuntos()) {
 				seguirJugando = false;
@@ -463,12 +447,17 @@ public class mapa {
 				
 				System.out.println("Has ganado!!");
 				System.out.println("Puntuación obtenida " + puntos );
+				break;
 			}
 			
+			if (seguirJugando == false) {
+				
+				System.out.println("¡Has sido atrapado por un fantasma!");
+				System.out.println("GAME OVER");
+				System.out.println("Puntuación obtenida " + puntos );
+			}
 		}
-			
 	}
-	
 }
 
-// Horas= 20
+// Horas= 30
