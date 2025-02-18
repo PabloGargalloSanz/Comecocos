@@ -38,8 +38,14 @@ public class mapa {
 			{centroFila, centroFila + 1}
 	};
 	
+	
+	
 	// Variables puntuacion
 	int puntos = 0;
+	int multiplicador = 1;
+	
+	//Variable nivel
+	int nivel = 0;
 	
 	// Variable seguir jugando
 	boolean seguirJugando = true;
@@ -272,24 +278,106 @@ public class mapa {
 	
 		if(modoCazador) {
 			tiempoCazador--;
+			if (tiempoCazador == 1) {
+				personaje = 'x';
+			}
 			if (tiempoCazador <= 0) {
 				modoCazador = false;
 				personaje = 'C';
 			}
 		}
 		
+		if (mapa[nuevaFila][nuevaColumna] == superior ) {
+			aumentarDificultad();
+		}
+		
+		if (mapa[nuevaFila][nuevaColumna] == inferior ) {
+			bajarDificultad();
+		}
+		
 		filaJugador = nuevaFila;
 		columnaJugador = nuevaColumna;
-		
+		mapa[filaJugador][columnaJugador] = personaje;	
 		puntos++; //Cada vez que se mueva se suma 1 punto (simulando puntuacion por tiempo vivo)
 		
-		mapa[filaJugador][columnaJugador] = personaje;	
 		
 		puntos();
 	}
 	
+	//Aumentar dificultad
+	public void aumentarDificultad() {
+		
+		alto = alto - 1;
+		ancho = ancho - 1;
+		
+		
+		if (alto < 7) {
+			alto = 7;
+		}
+		
+		if (ancho < 7) {
+			ancho = 7;
+		}
+		
+		mapa[filaJugador][columnaJugador] = vacio ;
+		
+		ajusteMapa();		
+		
+	}
+	
+	//Bajar dificultad
+	public void bajarDificultad() {
+		
+		
+		alto = alto + 1;
+		ancho = ancho + 1;
+		
+		if (alto > 35) {
+			alto = 35;
+		}
+		
+		if (ancho > 35) {
+			ancho = 35;
+		}
+		
+		
+		mapa[filaJugador][columnaJugador] = vacio ;
+		
+		ajusteMapa();		
+		
+	}
+		
+
+	//Reajustar despues de cambiar de nivel
+	public void ajusteMapa() {
+		
+		
+		mapa = new char[alto][ancho];
+		
+		recalcularVariables();
+		generarBordes();
+		generarParedes();
+		generarChetadas();
+		generarCaja();
+		generarFantasmas();
+		
+	}
+	
+	public void recalcularVariables() {
+		centroFila = (alto) / 2;
+		centroColumna = (ancho) /2;
+		
+		
+		posicionesFantasmas = new int [][] {
+				{centroFila, centroColumna},
+				{centroFila - 1, centroColumna},
+				{centroFila, centroColumna - 1},
+				{centroFila, centroFila + 1}
+		};
+	}
+	
 	//Puntuación
-	public void puntos() {
+ 	public void puntos() {
 		if(mapa[filaJugador][columnaJugador] == '*') {
 			puntos = puntos + 10;
 			
@@ -300,10 +388,20 @@ public class mapa {
 	}
 	
 	public void eliminarFantasma(int fila, int columna) {
-		mapa[fila][columna] = vacio;
-		puntos = puntos + 100;
+		
+		mapa[fila][columna] = personajeChetado;
+		puntos += 100;
 		puntos();
 		
+		for (int i = 0; i < fantasma.length; i++) {
+			if (filaFantasma[i] == fila && columnaFantasma[i] == columna) {
+				filaFantasma[i] = posicionesFantasmas[i][0];
+				columnaFantasma[i] = posicionesFantasmas[i][1];
+				
+				mapa[filaFantasma[i]][columnaFantasma[i]] = fantasma[i];
+				break;
+			}
+		}
 	}
 	
 		// Generar caja fantasmas
@@ -341,6 +439,7 @@ public class mapa {
             int nuevaColumna = columnaFantasma[i];
             int direccion;
             boolean movimientoValido;
+            char estadoAnterior = ' ';
 
             int intentos = 0;
             do {
@@ -363,6 +462,7 @@ public class mapa {
                 }
                 
                 if (movimientoValido) {
+                	estadoAnterior = mapa[tempFila][tempColumna];
                     nuevaFila = tempFila;
                     nuevaColumna = tempColumna;
                     break;
@@ -371,17 +471,42 @@ public class mapa {
             } while (intentos < 10);
             
             if (movimientoValido) {
-                mapa[filaFantasma[i]][columnaFantasma[i]] = vacio; // Limpia la posición anterior
-                filaFantasma[i] = nuevaFila;
-                columnaFantasma[i] = nuevaColumna;
+            	
+                 mapa[filaFantasma[i]][columnaFantasma[i]] = ' ';
+            	
+            	if (estadoAnterior == galletas) {
+            		mapa[filaFantasma[i]][columnaFantasma[i]] = '.';
+            		
+                } else if (estadoAnterior == superior) {
+                	mapa[filaFantasma[i]][columnaFantasma[i]] = 'U';
+                	
+                } else if (estadoAnterior == inferior) {
+                	mapa[filaFantasma[i]][columnaFantasma[i]] = 'W';
+                	
+                }else if (estadoAnterior == chetadas) {
+                	mapa[filaFantasma[i]][columnaFantasma[i]] = '*';
+                	
+                }else {
+                	mapa[filaFantasma[i]][columnaFantasma[i]] = ' ';
+                }
+                 
+            	filaFantasma[i] = nuevaFila;
+               	columnaFantasma[i] = nuevaColumna;
+                mapa[filaFantasma[i]][columnaFantasma[i]] = 'F';
                 
-                if (filaFantasma[i] == filaJugador && columnaFantasma[i] == columnaJugador && modoCazador == false) {
+                
+                if (filaFantasma[i] == filaJugador && columnaFantasma[i] == columnaJugador) {
                     
-                    seguirJugando = false;
-                    return;
+                   if (!modoCazador) {
+                	   seguirJugando = false;
+                	   return;
+                	   
+                   }else {
+                	   eliminarFantasma(filaFantasma[i], columnaFantasma[i]);
+                   }
                 }
                 
-                mapa[filaFantasma[i]][columnaFantasma[i]] = 'F';
+                
             }
 		}
 	}
@@ -395,8 +520,6 @@ public class mapa {
 		return false;
 	}
 
-	
-	
 	
 	// Finalizar partida por puntos
 	private boolean hayPuntos() {
@@ -442,7 +565,7 @@ public class mapa {
 				seguirJugando = false;
 				
 				for (int i = 0; i < (alto + 5); i++) {
-					System.out.println("");
+					System.out.println(" ");
 				}
 				
 				System.out.println("Has ganado!!");
@@ -452,6 +575,10 @@ public class mapa {
 			
 			if (seguirJugando == false) {
 				
+				for (int i = 0; i < (alto + 5); i++) {
+					System.out.println(" ");
+				}
+				
 				System.out.println("¡Has sido atrapado por un fantasma!");
 				System.out.println("GAME OVER");
 				System.out.println("Puntuación obtenida " + puntos );
@@ -460,4 +587,4 @@ public class mapa {
 	}
 }
 
-// Horas= 30
+// Horas= 40
