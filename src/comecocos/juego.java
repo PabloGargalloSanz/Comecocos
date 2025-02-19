@@ -2,12 +2,17 @@ package comecocos;
 
 
 
-public class juego {
+public class Juego {
 	//Main
 		public static void main(String[]args) {
 			
-			mapa nuevoMapa = new mapa();
+			Mapa nuevoMapa = new Mapa();
+			Fantasmas fantasmas = new Fantasmas(nuevoMapa, null);
+			Personaje personaje = new Personaje(nuevoMapa, fantasmas);
+			
+			
 			nuevoMapa.generarMapa();
+			
 	        nuevoMapa.jugar();
 	      
 	    }
