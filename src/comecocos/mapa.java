@@ -2,6 +2,8 @@ package comecocos;
 
 import java.util.Random;
 import java.util.Scanner;
+import java.util.LinkedList;
+import java.util.Queue;
 
 public class mapa {
 	
@@ -80,13 +82,17 @@ public class mapa {
 	// Metodo Relleno del mapa
 	
 	public void generarMapa() {
-	
-		generarBordes();
-		generarParedes();
-		generarChetadas();
-		generarJugador();
-		generarCaja();
-		generarFantasmas();
+		
+		do {
+			
+			generarBordes();
+			generarParedes();
+			generarChetadas();
+			generarJugador();
+			generarCaja();
+			generarFantasmas();
+			
+		} while (!verificarGalletasAlcanzables());
 	}
 		
 	// Generar Bordes y galletas
@@ -144,12 +150,12 @@ public class mapa {
 		}
 	
 		if (!existeSuperior && (ran.nextInt(100) < 5)) {
-			int fila;
+			int fila ;
 			int columna;
 			
 			do {
-				fila = ran.nextInt(alto -2 ) + 1;
-				columna = ran.nextInt(ancho - 2) + 1;
+				fila = ran.nextInt(alto -3 ) + 1; //Para que al comersela el jugador no se genere en el limite
+				columna = ran.nextInt(ancho - 3) + 1;
 				
 			}while (mapa[fila][columna] != galletas);
 			
@@ -321,6 +327,7 @@ public class mapa {
 		
 		mapa[filaJugador][columnaJugador] = vacio ;
 		
+		
 		ajusteMapa();		
 		
 	}
@@ -350,17 +357,18 @@ public class mapa {
 
 	//Reajustar despues de cambiar de nivel
 	public void ajusteMapa() {
-		
-		
-		mapa = new char[alto][ancho];
-		
-		recalcularVariables();
-		generarBordes();
-		generarParedes();
-		generarChetadas();
-		generarCaja();
-		generarFantasmas();
-		
+	     do{
+	        mapa = new char[alto][ancho];
+	        
+	        recalcularVariables();
+	        generarBordes();
+	        generarParedes();
+	        generarChetadas();
+	        generarCaja();
+	        generarFantasmas();
+	        
+	    }while (!verificarGalletasAlcanzables());
+
 	}
 	
 	public void recalcularVariables() {
@@ -520,6 +528,62 @@ public class mapa {
 		return false;
 	}
 
+	public boolean buscarCamino(int inicioFila, int inicioColumna, int objetivoFila, int objetivoColumna) {
+		
+        boolean[][] visitado = new boolean[alto][ancho];
+        Queue<int[]> cola = new LinkedList<>();
+        int[][] direccion = {{-1, 0}, {1, 0}, {0, -1}, {0, 1}}; // Arriba, Abajo, Izquierda, Derecha
+
+        // Añadir la posición inicial a la cola y marcarla como visitada
+        cola.add(new int[]{inicioFila, inicioColumna});
+        visitado[inicioFila][inicioColumna] = true;
+
+        while (!cola.isEmpty()) {
+        	
+            int[] posicionActual = cola.poll();
+            int filaActual = posicionActual[0];
+            int columnaActual = posicionActual[1];
+
+            // Si se ha llegado al objetivo, se encontró un camino
+            if (filaActual == objetivoFila && columnaActual == objetivoColumna) {
+                return true; // Se encontró un camino
+            }
+
+            // Explorar las direcciones posibles
+            for (int[] dir : direccion) {
+                int nuevaFila = filaActual + dir[0];
+                int nuevaColumna = columnaActual + dir[1];
+
+                // Verificar si la nueva posición es válida y no ha sido visitada
+                if (nuevaFila > 0 && nuevaFila < alto - 1 && nuevaColumna > 0 && nuevaColumna < ancho - 1 &&
+                    mapa[nuevaFila][nuevaColumna] != limite && mapa[nuevaFila][nuevaColumna] != pared &&
+                    !visitado[nuevaFila][nuevaColumna]) {
+                	
+                    cola.add(new int[]{nuevaFila, nuevaColumna}); // Añadir nueva posición a la cola
+                    
+                    visitado[nuevaFila][nuevaColumna] = true; // Marcar como visitada
+                }
+            }
+        }
+        return false; // No se encontró un camino
+    }
+    
+    // Método para llegar a todas las galletas
+	public boolean verificarGalletasAlcanzables() {
+        for (int fila = 0; fila < alto; fila++) {
+            for (int columna = 0; columna < ancho; columna++) {
+            	
+                if (mapa[fila][columna] == '.') { // Si hay una galleta
+                    boolean alcanzable = buscarCamino(filaJugador, columnaJugador, fila, columna);
+                    
+                    if (!alcanzable) {
+                        return false; // Si alguna galleta no es alcanzable, devuelve false
+                    }
+                }
+            }
+        }
+        return true; // Todas las galletas son alcanzables
+    }
 	
 	// Finalizar partida por puntos
 	private boolean hayPuntos() {
