@@ -1,15 +1,15 @@
 package comecocos;
 
-import java.util.Random;
-import java.util.Scanner;
 import java.util.LinkedList;
 import java.util.Queue;
+import java.util.Random;
+import java.util.Scanner;
 
-public class mapa {
+public class Mapa {
 	
 	// Variable de la matriz
-	int alto = 25;
-	int ancho = 25;
+	int alto = 20;
+	int ancho = 20;
 	char limite = '#';
 	char pared = '|';
 	char personaje = 'C';
@@ -20,6 +20,10 @@ public class mapa {
 	char galletas = '.';
 	char chetadas = '*'; 
 	char vacio = ' ';
+	
+	// Variables niveles
+	char superior = 'U'; //Para subir a un nivel mas exigente (uppper)
+	char inferior = 'W'; //Para bajar a un nivel mas facil (lower)
 	
 	// Variable calculo centro
 	int centroFila = (alto) / 2;
@@ -44,28 +48,19 @@ public class mapa {
 	
 	// Variables puntuacion
 	int puntos = 0;
-	int multiplicador = 1;
-	
-	//Variable nivel
-	int nivel = 0;
-	
+		
 	// Variable seguir jugando
 	boolean seguirJugando = true;
 	
 	// Caja fantasmas para jugador
-	boolean bloqueado = (filaJugador >= (centroFila - 1) && filaJugador <= (centroFila + 1) 
-			&& columnaJugador >= (centroColumna - 2) && columnaJugador <= (centroColumna + 2));
+	boolean bloqueado = (filaJugador >= (centroFila - 2) && filaJugador <= (centroFila + 2) 
+			&& columnaJugador >= (centroColumna - 3) && columnaJugador <= (centroColumna + 3));
 	
 	// Variables movimiento
 	
 	char direccion;
 	
 	
-	// Variables niveles
-	char superior = 'U'; //Para subir a un nivel mas exigente (uppper)
-	char inferior = 'W'; //Para bajar a un nivel mas facil (lower)
-	
-
 	Random ran = new Random();
 	Scanner sc = new Scanner(System.in);
 	
@@ -74,7 +69,7 @@ public class mapa {
 	char[][] mapa; 
 	
 	//Constructor
-	public mapa(){
+	public Mapa(){
 		mapa = new char[alto][ancho];
 	}
 	
@@ -92,20 +87,20 @@ public class mapa {
 			generarCaja();
 			generarFantasmas();
 			
-		} while (!verificarGalletasAlcanzables());
+		} while (!verificarGalletasAlcanzables());// Comprueba que se pueda acceder a todas las posiciones
 	}
 		
 	// Generar Bordes y galletas
 	public void generarBordes() {
 		for(int i = 0; i < alto; i++) {
 			for(int j = 0; j < ancho; j++) {
-				
+				//Coloca # en los bordes
 				if ( i == 0 || j == 0 || i == alto -1 || j == ancho -1 ) {
 					mapa[i][j] = limite ;
 				
 				
 				 }else {
-					mapa[i][j] = galletas;
+					mapa[i][j] = galletas; // Coloca . en el resto
 				}
 			}
 			
@@ -114,7 +109,7 @@ public class mapa {
 		
 		// Generar paredes
 	public void generarParedes() {
-		for(int i = 2; i < alto - 2; i++) { // para tener espacio para pasar seguro al lado de los limites ponemos el valor 2 y -2
+		for(int i = 2; i < alto - 2; i++) { // para no colocar paredes encima de limites ponemos el valor 2 y -2
 			for(int j = 2; j < ancho - 2; j++) {
 				
 				if (i >= (centroFila - 2) && i <= (centroFila + 2) 
@@ -123,9 +118,10 @@ public class mapa {
 						continue; // no colocar paredes al rededor de la caja de fantasmas
 				} 
 				
-				if (ran.nextInt(100) < 20) {
+				if (ran.nextInt(100) < 20) {//Probabilidad del 20% de colocar pared o no
 					
 					mapa[i][j] = pared;
+				
 				}
 			}
 		}
@@ -149,7 +145,7 @@ public class mapa {
 			}
 		}
 	
-		if (!existeSuperior && (ran.nextInt(100) < 5)) {
+		if (!existeSuperior && (ran.nextInt(100) < 5)) { //Probabilidad de 5%, solamente puede haber una
 			int fila ;
 			int columna;
 			
@@ -177,11 +173,11 @@ public class mapa {
 			
 	}
 	
-	// Generar galletas chetadas
+	// Generar galletas chetadas, son las que permiten al jugador comerse a los fantasmas
 	public void generarChetadas() {
 	
 		int cantidadChetadas = 0;
-		int maxChetadas = (alto + ancho) / 3;
+		int maxChetadas = (alto + ancho) / 3; //Limito la cantidad de galletas a alrededor de 15 por mapa
 		
 		for(int i = 1; i < alto - 1; i++) { 
 			for(int j = 1; j < ancho - 1; j++) {
@@ -221,7 +217,7 @@ public class mapa {
 	}
 	
 	
-	
+	// Movimiento del jugador
 	public void movimientoJugador() {
 		
 		direccion = sc.next().charAt(0);
@@ -229,53 +225,54 @@ public class mapa {
 		int nuevaColumna = columnaJugador;
 		
 		
-		mapa[filaJugador][columnaJugador] = vacio ;
+		mapa[filaJugador][columnaJugador] = vacio ; //Limpio posicion del jugador del mapa
 		
 		switch (direccion) {
 			
 		case 'w' -> {
-			
+			//comprueba que no haya pared o limite encima
 			if ((nuevaFila > 1 && mapa[nuevaFila - 1 ][nuevaColumna] != limite ) &&
 				(nuevaFila > 1 && mapa[nuevaFila - 1 ][nuevaColumna] != pared )){
 				nuevaFila--;
 			}
 		}
 		case 's' -> {
-			
+			//comprueba que no haya pared o limite abajo
 			if ((nuevaFila < alto - 2 && mapa[nuevaFila + 1 ][nuevaColumna] != limite ) &&
 				(nuevaFila < alto - 2 && mapa[nuevaFila + 1 ][nuevaColumna] != pared )) {
 				nuevaFila++;
 			}
 		}
 		case 'a' -> {
-			
+			//comprueba que no haya pared o limite izquierda
 			if ((nuevaColumna > 1 && mapa[nuevaFila][nuevaColumna - 1 ] != limite ) &&
 				(nuevaColumna > 1 && mapa[nuevaFila][nuevaColumna - 1 ] != pared )) {
 				nuevaColumna--;
 			}
 		}
 		case 'd' -> {
-			
+			//comprueba que no haya pared o limite derecha
 			if ((nuevaColumna < ancho - 2 && mapa[nuevaFila][nuevaColumna + 1 ] != limite ) &&
 				(nuevaColumna < ancho - 2 && mapa[nuevaFila][nuevaColumna + 1 ] != pared )){
 				nuevaColumna++;
 			}
 		}
 		}
-		if (mapa[nuevaFila][nuevaColumna] == chetadas) {
+		if (mapa[nuevaFila][nuevaColumna] == chetadas) { //En caso de que la posicion del jugador sea la misma que la de una galelta chetada
 			modoCazador = true;
-			tiempoCazador = 10;
-			personaje = personajeChetado;
+			puntos += 10;
+			tiempoCazador = 10;// Doy acceso al tiempo de cazador durante 10 movimientos
+			personaje = personajeChetado; //Cambio el caracter del jugador de C a X
 			
 		}
-		for (char F : fantasma) {
-			if (mapa[nuevaFila][nuevaColumna] == F) {
+		for (char F : fantasma) {//Recorre el array de fantasmas
+			if (mapa[nuevaFila][nuevaColumna] == F) { // Compara la posicion del jugador con el caracter F que es el de cada fantasma
 				
 				if (modoCazador) {
-					eliminarFantasma(nuevaFila, nuevaColumna);
+					eliminarFantasma(nuevaFila, nuevaColumna);// En caso de que es activado elimina al fantasma en esa posicion con el método
 					
 				} else {
-					seguirJugando = false;
+					seguirJugando = false; // si no esta en modo cazador cambia el boolean de seguir jugando
 					return;
 				}
 			}
@@ -312,11 +309,11 @@ public class mapa {
 	
 	//Aumentar dificultad
 	public void aumentarDificultad() {
-		
+		// Reasigno el tamaño del mapa
 		alto = alto - 1;
 		ancho = ancho - 1;
 		
-		
+		//El tamaño minimo de mapa es de 7x7
 		if (alto < 7) {
 			alto = 7;
 		}
@@ -328,23 +325,24 @@ public class mapa {
 		mapa[filaJugador][columnaJugador] = vacio ;
 		
 		
-		ajusteMapa();		
+		ajusteMapa();	// Reajusto el centro del mapa
 		
 	}
 	
 	//Bajar dificultad
 	public void bajarDificultad() {
-		
+		// Reasigno el tamaño del mapa
 		
 		alto = alto + 1;
 		ancho = ancho + 1;
 		
-		if (alto > 35) {
-			alto = 35;
+		//El tamaño minimo de mapa es de 25x25
+		if (alto > 25) {
+			alto = 25;
 		}
 		
-		if (ancho > 35) {
-			ancho = 35;
+		if (ancho > 25) {
+			ancho = 25;
 		}
 		
 		
@@ -367,13 +365,13 @@ public class mapa {
 	        generarCaja();
 	        generarFantasmas();
 	        
-	    }while (!verificarGalletasAlcanzables());
+	    }while (!verificarGalletasAlcanzables()); //Comprueba poder llegar a todas las galletas
 
 	}
 	
 	public void recalcularVariables() {
 		centroFila = (alto) / 2;
-		centroColumna = (ancho) /2;
+		centroColumna = (ancho) /2; // Calcula de nuevo el centro del mapa y la posicion de los fantasmas
 		
 		
 		posicionesFantasmas = new int [][] {
@@ -392,7 +390,7 @@ public class mapa {
 			mapa[filaJugador][columnaJugador] = ' ';
 		}
 		
-		System.out.println(puntos);
+		
 	}
 	
 	public void eliminarFantasma(int fila, int columna) {
@@ -401,7 +399,7 @@ public class mapa {
 		puntos += 100;
 		puntos();
 		
-		for (int i = 0; i < fantasma.length; i++) {
+		for (int i = 0; i < fantasma.length; i++) { //Recorre el array para determinar que fantasma es y lo elimina y regenera en la caja
 			if (filaFantasma[i] == fila && columnaFantasma[i] == columna) {
 				filaFantasma[i] = posicionesFantasmas[i][0];
 				columnaFantasma[i] = posicionesFantasmas[i][1];
@@ -429,7 +427,7 @@ public class mapa {
 		// Generar fantasmas
 	public void generarFantasmas() {
 		for(int i = 0; i < fantasma.length; i++) {
-				
+				// genera los fantasmas en las posiciones de la matriz
 			int fila = posicionesFantasmas[i][0];
 			int columna = posicionesFantasmas[i][1];
 			
@@ -463,25 +461,26 @@ public class mapa {
                     case 3 -> tempColumna++; // Derecha
                 }
                 
-                if (tempFila <= 0 || tempFila >= alto - 1 || tempColumna <= 0 || tempColumna >= ancho - 1 ||
+                if (tempFila <= 0 || tempFila >= alto - 1 || tempColumna <= 0 || tempColumna >= ancho - 1 || // comprobacion de colisiones
                     mapa[tempFila][tempColumna] == limite || mapa[tempFila][tempColumna] == pared ||
                     esPosicionFantasma(tempFila, tempColumna)) {
                     movimientoValido = false;
                 }
                 
                 if (movimientoValido) {
-                	estadoAnterior = mapa[tempFila][tempColumna];
+                	estadoAnterior = mapa[tempFila][tempColumna]; //asigno el caracter a donde se va a mover el fantasma
                     nuevaFila = tempFila;
                     nuevaColumna = tempColumna;
-                    break;
+                    break;// sale del bucle 
                 }
                 intentos++;
             } while (intentos < 10);
             
             if (movimientoValido) {
-            	
+            	//bororo la posicion del fantasma
                  mapa[filaFantasma[i]][columnaFantasma[i]] = ' ';
-            	
+                 
+            	// compruba que habia donde se iba a desplazar el fantasma e intercambian la posicion
             	if (estadoAnterior == galletas) {
             		mapa[filaFantasma[i]][columnaFantasma[i]] = '.';
             		
@@ -513,9 +512,7 @@ public class mapa {
                 	   eliminarFantasma(filaFantasma[i], columnaFantasma[i]);
                    }
                 }
-                
-                
-            }
+             }
 		}
 	}
 
@@ -528,6 +525,7 @@ public class mapa {
 		return false;
 	}
 
+	//Comprueba los caminos 
 	public boolean buscarCamino(int inicioFila, int inicioColumna, int objetivoFila, int objetivoColumna) {
 		
         boolean[][] visitado = new boolean[alto][ancho];
@@ -587,7 +585,7 @@ public class mapa {
 	
 	// Finalizar partida por puntos
 	private boolean hayPuntos() {
-		
+		//Comprueba si no hay mas galletas en ese mapa, si las hay acaba el juego
 		for (char[] mapa1 : mapa) {
 			for (int j = 0; j < mapa1.length; j++) {
 				if (mapa1[j] == galletas) {
@@ -601,6 +599,7 @@ public class mapa {
 	
 	// Metodo imprimir mapa
 	public void imprimirMapa() {
+		
 		for(int i = 0; i < alto; i++) {
 			for(int j = 0; j < ancho; j++) {
 				System.out.print(mapa[i][j]);
@@ -609,11 +608,14 @@ public class mapa {
 			System.out.println("");
 		}
 		
+		System.out.println("Puntuación: "  + puntos);
+		
 	}
 
-	
+	//Metodo jugar, donde esta todo.
 	public void jugar() {
 		while (seguirJugando) {
+			
 			
 			imprimirMapa();
 			
@@ -637,7 +639,7 @@ public class mapa {
 				break;
 			}
 			
-			if (seguirJugando == false) {
+			if (seguirJugando == false) { //en caso de que el fantasma pille al jugador
 				
 				for (int i = 0; i < (alto + 5); i++) {
 					System.out.println(" ");
@@ -650,5 +652,3 @@ public class mapa {
 		}
 	}
 }
-
-// Horas= 40
